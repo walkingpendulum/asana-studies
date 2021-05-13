@@ -147,7 +147,7 @@ hook_secret = None
 @app.route("/receive-webhook", methods=["POST"])
 def receive_webhook():
     global hook_secret
-    app.logger.info("Headers: \n" + str(request.headers))
+    # app.logger.info("Headers: \n" + str(request.headers))
     app.logger.info("Body: \n" + pprint.pformat(json.loads(request.data.decode())))
     if "X-Hook-Secret" in request.headers:
         if hook_secret is not None:
