@@ -1,18 +1,19 @@
 #! /usr/bin/env python
 import argparse
 import json
+from typing import List
 
 import asana
 import yaml
 
 
-def read_config():
+def read_config() -> dict:
     # keys: pat, workspace
     with open('config.yaml') as f:
         return yaml.load(f, Loader=yaml.Loader)
 
 
-def make_client(config):
+def make_client(config: dict):
     client = asana.Client.access_token(config['pat'])
 
     # Be nice to Asana and let them know you're running this example.
@@ -22,7 +23,7 @@ def make_client(config):
     return client
 
 
-def make_parser():
+def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     resources_group = parser.add_subparsers(
         title='Available Asana resources to manage',
@@ -52,9 +53,17 @@ def make_parser():
     webhook_create_parser.add_argument(
         '--resource',
         help='A resource ID to subscribe to. The resource can be a task or project.',
+        required=True,
     )
 
     webhook_create_parser.add_argument('--target', help='The URL to receive the HTTP POST.')
+
+    webhook_delete_parser = webhooks_commands_parser_group.add_parser('delete', description='Delete webhook')
+    webhook_delete_parser.add_argument(
+        '--webhook-id',
+        help='The webhook to delete.',
+        required=True,
+    )
 
     return parser
 
@@ -67,14 +76,18 @@ def main(argv=None):
         manage_webhooks(args)
 
 
-def list_webhooks(workspace: str, client):
+def list_webhooks(workspace: str, client) -> List[dict]:
     webhooks = list(client.webhooks.get_all(workspace=workspace))
     return webhooks
 
 
-def create_webhook(resource: str, target: str, client):
+def create_webhook(resource: str, target: str, client) -> dict:
     webhook = client.webhooks.create(resource=resource, target=target)
     return webhook
+
+
+def delete_webhook(webhook_id: str, client):
+    client.webhooks.delete_by_id(webhook_id)
 
 
 def manage_webhooks(args: argparse.Namespace):
@@ -93,6 +106,10 @@ def manage_webhooks(args: argparse.Namespace):
         target = args.target
         webhook = create_webhook(client=client, resource=resource, target=target)
         print(json.dumps(webhook, indent=4))
+
+    if command == 'delete':
+        webhook_id = args.webhook_id
+        delete_webhook(client=client, webhook_id=webhook_id)
 
 
 if __name__ == '__main__':
