@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import pika
 import yaml
 
@@ -13,15 +14,16 @@ if __name__ == '__main__':
     conn_params = pika.URLParameters(url=config['amqp_url'])
 
     connection = pika.BlockingConnection(conn_params)
-    channel = connection.channel()
-    channel.exchange_declare(exchange='asana_comments', exchange_type='fanout')
+    ch = connection.channel()
+    exchange_name = 'asana_events'
+    ch.exchange_declare(exchange=exchange_name, exchange_type='topic')
 
     queue_args = {
         'x-max-length': 100000,
         "x-message-ttl": 604800000,
     }
-    due_time_q = channel.queue_declare(queue='due_time_worker', arguments=queue_args)
-    photos_number_q = channel.queue_declare(queue='photos_number_worker', arguments=queue_args)
+    comments_q = ch.queue_declare(queue='comments', arguments=queue_args)
+    tasks_q = ch.queue_declare(queue='task_changes', arguments=queue_args)
 
-    channel.queue_bind(exchange='asana_comments', queue=due_time_q.method.queue)
-    channel.queue_bind(exchange='asana_comments', queue=photos_number_q.method.queue)
+    ch.queue_bind(exchange=exchange_name, queue=comments_q.method.queue, routing_key='story.comment_added.added')
+    ch.queue_bind(exchange=exchange_name, queue=tasks_q.method.queue, routing_key='task.default_task')
