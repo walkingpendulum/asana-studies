@@ -48,7 +48,7 @@ async def receive_webhook(request: web.Request) -> web.Response:
         logger.info(json.dumps(body, indent=4))
         post_hook = request.app['post_hook']
         if post_hook:
-            await post_hook(body)
+            await post_hook(request.app, body)
 
         return web.Response()
     else:

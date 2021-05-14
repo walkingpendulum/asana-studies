@@ -39,7 +39,7 @@ async def test_webhook(aiohttp_client, loop):
 
     history = []
 
-    async def track_history(body):
+    async def track_history(app, body):
         history.append(body)
 
     app = make_app(post_hook=track_history)
