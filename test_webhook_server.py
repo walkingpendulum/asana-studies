@@ -100,3 +100,15 @@ async def test_reject_second_handshake(aiohttp_client, loop):
 
     haker_handshake_resp: ClientResponse = await client.post(webhook_url, headers={'X-Hook-Secret': 'qwerty123'})
     assert haker_handshake_resp.status == 400
+
+
+async def test_reject_webhooks_before_handshake(aiohttp_client, loop):
+    webhook_url = '/receive-webhook?project=test-project'
+
+    app = make_app()
+
+    SignedClientRequest.set_secret(secret='SECRET')
+    client = await aiohttp_client(app, request_class=SignedClientRequest)
+    webhook_resp: ClientResponse = await client.post(webhook_url, json=[])
+    assert webhook_resp.status == 400
+
