@@ -14,7 +14,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     client = asana.Client.access_token(personal_access_token)
-    client.options['client_name'] = "hello_world_python"
+    client.options['client_name'] = "https://github.com/walkingpendulum/asana-studies/blob/master/list_comments.py"
 
     result = client.stories.get_stories_for_task(args.task_gid)
     comments = [story for story in result if story["type"] == "comment"]
