@@ -38,7 +38,11 @@ async def test_webhook(aiohttp_client, loop):
     hook_secret = 'SECRET'
 
     history = []
-    app = make_app(post_hook=lambda body, history=history: history.append(body))
+
+    async def track_history(body):
+        history.append(body)
+
+    app = make_app(post_hook=track_history)
 
     handshake_client = await aiohttp_client(app)
     handshake_resp: ClientResponse = await handshake_client.post(webhook_url, headers={'X-Hook-Secret': hook_secret})
