@@ -24,13 +24,13 @@ def make_client(config):
 
 def make_parser():
     parser = argparse.ArgumentParser()
-    commands_group = parser.add_subparsers(
+    resources_group = parser.add_subparsers(
         title='Available Asana resources to manage',
         description='Resources that Asana API provides.',
         help='Additional help for available resources',
-        dest='resource',
+        dest='asana_resource',
     )
-    webhooks_commands_parser = commands_group.add_parser(
+    webhooks_commands_parser = resources_group.add_parser(
         'webhooks',
         description='Webhooks management commands, supported by Asana API',
         help='Additional help for available webhooks management commands',
@@ -42,11 +42,19 @@ def make_parser():
         dest='webhooks_command',
     )
 
-    pak_create_parser = webhooks_commands_parser_group.add_parser('list', description='List all webhooks')
-    pak_create_parser.add_argument(
+    webhook_list_parser = webhooks_commands_parser_group.add_parser('list', description='List all webhooks')
+    webhook_list_parser.add_argument(
         '--workspace',
         help='Webhooks would be listed within given workspace. If omitted, value from config will be used',
     )
+
+    webhook_create_parser = webhooks_commands_parser_group.add_parser('create', description='Create webhook')
+    webhook_create_parser.add_argument(
+        '--resource',
+        help='A resource ID to subscribe to. The resource can be a task or project.',
+    )
+
+    webhook_create_parser.add_argument('--target', help='The URL to receive the HTTP POST.')
 
     return parser
 
@@ -55,7 +63,7 @@ def main(argv=None):
     parser = make_parser()
     args = parser.parse_args(argv)
 
-    if args.resource == 'webhooks':
+    if args.asana_resource == 'webhooks':
         manage_webhooks(args)
 
 
@@ -64,17 +72,27 @@ def list_webhooks(workspace: str, client):
     return webhooks
 
 
+def create_webhook(resource: str, target: str, client):
+    webhook = client.webhooks.create(resource=resource, target=target)
+    return webhook
+
+
 def manage_webhooks(args: argparse.Namespace):
     command = args.webhooks_command
-    workspace = args.workspace
 
     config = read_config()
     client = make_client(config)
-    workspace = workspace or config['workspace']
 
     if command == 'list':
+        workspace = args.workspace or config['workspace']
         webhooks = list_webhooks(workspace=workspace, client=client)
         print(json.dumps(webhooks, indent=4))
+
+    if command == 'create':
+        resource = args.resource
+        target = args.target
+        webhook = create_webhook(client=client, resource=resource, target=target)
+        print(json.dumps(webhook, indent=4))
 
 
 if __name__ == '__main__':
