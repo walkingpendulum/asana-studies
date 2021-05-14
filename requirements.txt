@@ -1,3 +1,3 @@
-asana
-flask
-pyyaml
+aiohttp==3.7.4.post0
+asana==0.10.3
+pyyaml==5.4.1
