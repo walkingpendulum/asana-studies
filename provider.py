@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-import pika
+import asyncio
+
+import aio_pika
 import yaml
-import time
 
 
 def read_config() -> dict:
@@ -10,17 +11,24 @@ def read_config() -> dict:
         return yaml.load(f, Loader=yaml.Loader)
 
 
-if __name__ == '__main__':
+async def main(loop):
     config = read_config()
-    conn_params = pika.URLParameters(url=config['amqp_url'])
-    connection = pika.BlockingConnection(conn_params)
-    channel = connection.channel()
-    channel.exchange_declare(exchange='asana_comments', exchange_type='fanout')
+    connection = await aio_pika.connect_robust(config['amqp_url'], loop=loop)
+
+    channel: aio_pika.Channel = await connection.channel()
+    exchange: aio_pika.Exchange = await channel.declare_exchange(name='asana_comments', type='fanout')
 
     for i in range(10):
         msg = f'Test message {i}.'
-        channel.basic_publish(exchange='asana_comments', routing_key='', body=msg.encode())
-        print(f'Published: {msg}')
-        time.sleep(0.5)
+        await exchange.publish(aio_pika.Message(body=msg.encode()), routing_key='')
 
-    connection.close()
+        print(f'Published: {msg}')
+        await asyncio.sleep(0.8)
+
+    await connection.close()
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(loop))
+    loop.close()
