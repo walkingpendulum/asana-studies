@@ -1,3 +1,4 @@
 aiohttp==3.7.4.post0
 asana==0.10.3
 pyyaml==5.4.1
+pika==1.2.0
