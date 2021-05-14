@@ -19,6 +19,7 @@ async def receive_webhook(request: web.Request) -> web.Response:
             err_msg = "Second handshake request received. This could be an attacker trying to set up a new secret. " \
                       "Ignoring."
             logger.error(err_msg)
+            return web.Response(status=400, reason="Can not handshake more than once")
         else:
             # Respond to the handshake request :)
             logger.info("New webhook")
@@ -45,14 +46,19 @@ async def receive_webhook(request: web.Request) -> web.Response:
             return web.Response()
 
         logger.info(json.dumps(body, indent=4))
+        post_hook = request.app['post_hook']
+        if post_hook:
+            post_hook(body)
+
         return web.Response()
     else:
         raise KeyError
 
 
-def make_app() -> web.Application:
+def make_app(post_hook=None) -> web.Application:
     app = web.Application()
     app['asana_auth'] = {}
+    app['post_hook'] = post_hook
     app.add_routes([
         web.post('/receive-webhook', receive_webhook)
     ])
