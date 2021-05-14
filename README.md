@@ -20,3 +20,12 @@
    ```
 1. Make changes in Asana and see the logs from the returned webhooks.
 1. Don't forget to deauthorize your temp PAT when you're done.
+
+## asana2rabbitmq
+This is an extension of the asana studies that were described above. Please familiarize yourself with them before continue.
+
+1. Acquire running RabbitMQ instance.
+1. Add `amqp_url: amqps://login:passwod@host:port` entry to `config.json`.
+1. Run `./asana2rabbitmq.py`
+1. Register webhook via `asana-cli.py`
+1. Run `./listen.py --queue task_changes` and `./listen.py --queue comments`. This will block, so do this in a separate terminal windows.
