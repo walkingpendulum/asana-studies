@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import argparse
+import json
 import sys
 
 import pika
@@ -32,8 +33,8 @@ def main(argv=None):
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
 
-    def callback(ch, method, properties, body):
-        print(" [x] %r" % body)
+    def callback(ch, method, properties, body: bytes):
+        print(f" [x] {json.loads(body.decode())}")
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_consume(queue=queue, on_message_callback=callback)
