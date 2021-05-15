@@ -18,7 +18,7 @@ def make_client(config: dict):
 
     # Be nice to Asana and let them know you're running this example.
     # This is optional, and you can delete this line.
-    client.options['client_name'] = "https://github.com/walkingpendulum/asana-studies/blob/master/asana_cli.py"
+    client.options['client_name'] = "https://github.com/walkingpendulum/asana-studies"
 
     return client
 
